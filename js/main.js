@@ -317,6 +317,10 @@
     setAll('sells', d.sells);
     const nb = num(tx.buys), ns = num(tx.sells);
     const total = (nb || 0) + (ns || 0);
+    const frame = $('.chart iframe');
+    if (frame && pair.pairAddress && !frame.src.includes('/solana/' + pair.pairAddress + '?')) {
+      frame.src = frame.src.replace(/\/solana\/[^?]+/, '/solana/' + pair.pairAddress);
+    }
     const bar = $('[data-k="buyShare"]');
     if (bar) bar.style.transform = 'scaleX(' + (total ? nb / total : 0) + ')';
     ['m5', 'h1', 'h6'].forEach((k) => setAll(k, pct(ch[k]), trend(ch[k])));
