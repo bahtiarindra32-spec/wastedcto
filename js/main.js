@@ -342,7 +342,7 @@
         : 'Up ' + pct(ch.h24).slice(1) + ' on the day. Bears, meanwhile, are lying in the road.';
     }
 
-    setAll('status', 'PumpSwap · Live');
+    setAll('status', 'Live');
     setAll('updated', 'updated ' + new Date().toLocaleTimeString('en-GB', { hour12: false }));
     document.body.classList.add('is-live');
     buildTicker(d);
