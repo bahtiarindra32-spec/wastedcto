@@ -258,6 +258,39 @@
     track.replaceChildren(group(), group());
   }
 
+  const survivors = (() => {
+    const el = $('[data-k="holders"]');
+    const sec = $('.kills');
+    let target = null, shown = 0, seen = false, raf = 0;
+    const show = (v) => { el.textContent = int(Math.round(v)); };
+    function run() {
+      cancelAnimationFrame(raf);
+      if (!el || target === null || !seen) return;
+      if (reduce.matches) { shown = target; show(target); return; }
+      const from = shown, to = target, t0 = performance.now(), dur = from === 0 ? 1800 : 900;
+      const step = (now) => {
+        const k = Math.min(1, (now - t0) / dur);
+        shown = from + (to - from) * (1 - Math.pow(1 - k, 3));
+        show(shown);
+        if (k < 1) raf = requestAnimationFrame(step);
+      };
+      raf = requestAnimationFrame(step);
+    }
+    if (sec) {
+      const io = new IntersectionObserver(([e]) => {
+        if (!e.isIntersecting) return;
+        seen = true;
+        io.disconnect();
+        run();
+      }, { threshold: 0.35 });
+      io.observe(sec);
+    }
+    return {
+      set(v) { if (v === null) return; target = v; run(); },
+      fail() { if (el && target === null) el.textContent = '—'; },
+    };
+  })();
+
   function render(pair) {
     const p = num(pair.priceUsd);
     const pc = pair.priceChange || {};
@@ -280,6 +313,16 @@
     setAll('vol', d.vol);
     setAll('liq', d.liq);
     setAll('txns', d.buys + ' / ' + d.sells);
+    setAll('buys', d.buys);
+    setAll('sells', d.sells);
+    const nb = num(tx.buys), ns = num(tx.sells);
+    const total = (nb || 0) + (ns || 0);
+    const frame = $('.chart iframe');
+    if (frame && pair.pairAddress && !frame.src.includes('/solana/' + pair.pairAddress + '?')) {
+      frame.src = frame.src.replace(/\/solana\/[^?]+/, '/solana/' + pair.pairAddress);
+    }
+    const bar = $('[data-k="buyShare"]');
+    if (bar) bar.style.transform = 'scaleX(' + (total ? nb / total : 0) + ')';
     ['m5', 'h1', 'h6'].forEach((k) => setAll(k, pct(ch[k]), trend(ch[k])));
     $$('[data-k="h24"]').forEach((el) => {
       el.textContent = el.closest('.cash') ? pct(ch.h24) + ' 24H' : pct(ch.h24);
@@ -302,7 +345,7 @@
         : 'Up ' + pct(ch.h24).slice(1) + ' on the day. Bears, meanwhile, are lying in the road.';
     }
 
-    setAll('status', 'PumpSwap · Live');
+    setAll('status', 'Live');
     setAll('updated', 'updated ' + new Date().toLocaleTimeString('en-GB', { hour12: false }));
     document.body.classList.add('is-live');
     buildTicker(d);
@@ -343,9 +386,44 @@
       if (!document.hidden) timer = setTimeout(load, REFRESH_MS);
     }
   }
+  const HOLDERS_API = 'https://api.geckoterminal.com/api/v2/networks/solana/tokens/' + CA + '/info';
+  const HOLDERS_MS = 300000;
+  let holdersTimer = 0;
+  let holdersAt = null;
+  function ago(t) {
+    const m = Math.max(0, Math.round((Date.now() - t) / 60000));
+    if (m < 1) return 'updated just now';
+    if (m < 60) return 'updated ' + m + 'm ago';
+    const h = Math.round(m / 60);
+    return h < 48 ? 'updated ' + h + 'h ago' : 'updated ' + Math.round(h / 24) + 'd ago';
+  }
+  async function loadHolders() {
+    clearTimeout(holdersTimer);
+    const ctrl = new AbortController();
+    const kill = setTimeout(() => ctrl.abort(), 12000);
+    try {
+      const res = await fetch(HOLDERS_API, { signal: ctrl.signal, cache: 'no-store' });
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const h = ((((await res.json()) || {}).data || {}).attributes || {}).holders || {};
+      const count = h.count == null || h.count === '' ? null : num(h.count);
+      if (count === null) throw new Error('no holders');
+      survivors.set(count);
+      const t = Date.parse(h.last_updated);
+      holdersAt = Number.isNaN(t) ? null : t;
+      setAll('holdersAt', holdersAt ? ago(holdersAt) : 'live');
+    } catch {
+      survivors.fail();
+      setAll('holdersAt', holdersAt ? ago(holdersAt) + ', retrying' : 'no signal, retrying');
+    } finally {
+      clearTimeout(kill);
+      if (!document.hidden) holdersTimer = setTimeout(loadHolders, HOLDERS_MS);
+    }
+  }
+
   document.addEventListener('visibilitychange', () => {
-    if (document.hidden) clearTimeout(timer);
-    else load();
+    if (document.hidden) { clearTimeout(timer); clearTimeout(holdersTimer); }
+    else { load(); loadHolders(); }
   });
   load();
+  loadHolders();
 })();
