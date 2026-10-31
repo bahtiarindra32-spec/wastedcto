@@ -405,7 +405,7 @@
       const res = await fetch(HOLDERS_API, { signal: ctrl.signal, cache: 'no-store' });
       if (!res.ok) throw new Error('HTTP ' + res.status);
       const h = ((((await res.json()) || {}).data || {}).attributes || {}).holders || {};
-      const count = num(h.count);
+      const count = h.count == null || h.count === '' ? null : num(h.count);
       if (count === null) throw new Error('no holders');
       survivors.set(count);
       const t = Date.parse(h.last_updated);
@@ -413,7 +413,7 @@
       setAll('holdersAt', holdersAt ? ago(holdersAt) : 'live');
     } catch {
       survivors.fail();
-      if (holdersAt === null) setAll('holdersAt', 'no signal, retrying');
+      setAll('holdersAt', holdersAt ? ago(holdersAt) + ', retrying' : 'no signal, retrying');
     } finally {
       clearTimeout(kill);
       if (!document.hidden) holdersTimer = setTimeout(loadHolders, HOLDERS_MS);
