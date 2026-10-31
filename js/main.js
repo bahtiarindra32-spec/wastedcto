@@ -258,6 +258,39 @@
     track.replaceChildren(group(), group());
   }
 
+  const kills = (() => {
+    const el = $('[data-k="kills"]');
+    const sec = $('.kills');
+    let target = null, shown = 0, seen = false, raf = 0;
+    const show = (v) => { el.textContent = int(Math.round(v)); };
+    function run() {
+      cancelAnimationFrame(raf);
+      if (!el || target === null || !seen) return;
+      if (reduce.matches) { shown = target; show(target); return; }
+      const from = shown, to = target, t0 = performance.now(), dur = from === 0 ? 1800 : 900;
+      const step = (now) => {
+        const k = Math.min(1, (now - t0) / dur);
+        shown = from + (to - from) * (1 - Math.pow(1 - k, 3));
+        show(shown);
+        if (k < 1) raf = requestAnimationFrame(step);
+      };
+      raf = requestAnimationFrame(step);
+    }
+    if (sec) {
+      const io = new IntersectionObserver(([e]) => {
+        if (!e.isIntersecting) return;
+        seen = true;
+        io.disconnect();
+        run();
+      }, { threshold: 0.35 });
+      io.observe(sec);
+    }
+    return {
+      set(v) { if (v === null) return; target = v; run(); },
+      fail() { if (el && target === null) el.textContent = '—'; },
+    };
+  })();
+
   function render(pair) {
     const p = num(pair.priceUsd);
     const pc = pair.priceChange || {};
@@ -280,6 +313,13 @@
     setAll('vol', d.vol);
     setAll('liq', d.liq);
     setAll('txns', d.buys + ' / ' + d.sells);
+    setAll('buys', d.buys);
+    setAll('sells', d.sells);
+    const nb = num(tx.buys), ns = num(tx.sells);
+    const total = (nb || 0) + (ns || 0);
+    const bar = $('[data-k="buyShare"]');
+    if (bar) bar.style.transform = 'scaleX(' + (total ? nb / total : 0) + ')';
+    kills.set(nb);
     ['m5', 'h1', 'h6'].forEach((k) => setAll(k, pct(ch[k]), trend(ch[k])));
     $$('[data-k="h24"]').forEach((el) => {
       el.textContent = el.closest('.cash') ? pct(ch.h24) + ' 24H' : pct(ch.h24);
@@ -310,6 +350,7 @@
 
   function renderError() {
     setAll('status', 'No signal');
+    kills.fail();
     document.body.classList.remove('is-live');
     const verdict = $('[data-k="verdict"]');
     if (verdict.textContent === 'Loading…') {

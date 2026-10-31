@@ -120,6 +120,15 @@
       <p class="dead__cap">“They thought $WASTED was finished.” <span>— @Wastedrespawned</span></p>
     </section>
 
+    <section class="kills" id="kills" aria-labelledby="kills-title">
+      <p class="eyebrow">Kill feed — last 24 hours</p>
+      <h2 id="kills-title" class="kills__count"><span data-k="kills">···</span><span class="sr-only"> bears wasted today</span></h2>
+      <p class="kills__label" aria-hidden="true">bears wasted today</p>
+      <p class="kills__note">One buy, one bear. Counted live from DexScreener.</p>
+      <div class="kills__bar" aria-hidden="true"><i data-k="buyShare"></i></div>
+      <p class="kills__split"><span>Buys<b data-k="buys">···</b></span><span>Sells, got away<b data-k="sells">···</b></span></p>
+    </section>
+
     <section class="file file--after" aria-label="Respawn">
       <ol class="beats" start="4">
         <li class="beat reveal">
@@ -155,7 +164,6 @@
           <div><dt>Volume, 24h</dt><dd data-k="vol">···</dd></div>
           <div><dt>Liquidity</dt><dd data-k="liq">···</dd></div>
           <div><dt>Buys / sells, 24h</dt><dd data-k="txns">···</dd></div>
-          <div class="sheet__joke"><dt>Bears</dt><dd>Wasted</dd></div>
         </dl>
 
         <ul class="deltas" aria-label="Price change">
@@ -164,6 +172,10 @@
           <li><span>6h</span><b data-k="h6">···</b></li>
           <li><span>24h</span><b data-k="h24">···</b></li>
         </ul>
+
+        <figure class="chart reveal">
+          <iframe title="$WASTED live chart on DexScreener" src="https://dexscreener.com/solana/TT7DKs9YjJZj1fwMGoPmKBmDreZzyMAMrHoDCGdfwqN?embed=1&amp;loadChartSettings=0&amp;trades=0&amp;tabs=0&amp;info=0&amp;chartLeftToolbar=0&amp;chartTheme=dark&amp;theme=dark&amp;chartStyle=1&amp;chartType=usd&amp;interval=15" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+        </figure>
 
         <p class="results__src">
           <span>DexScreener · PumpSwap pair · <span data-k="updated">not yet updated</span></span>

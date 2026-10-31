@@ -146,7 +146,6 @@ ol,ul{list-style:none}
 .sheet dt{display:flex;align-items:baseline;flex:1;gap:14px;font:12px/1 var(--mono);letter-spacing:.14em;text-transform:uppercase;white-space:nowrap}
 .sheet dt::after{content:"";flex:1;border-bottom:2px dotted var(--line);transform:translateY(-3px)}
 .sheet dd{font:800 clamp(22px,2.6vw,34px)/1 var(--sans);font-stretch:80%;font-variant-numeric:tabular-nums;text-align:right}
-.sheet__joke dd{color:var(--red);text-transform:uppercase}
 .deltas{display:grid;grid-template-columns:repeat(4,1fr);margin-top:40px}
 .deltas li{display:grid;gap:10px;padding:18px 0 0;border-top:1px solid var(--ink)}
 .deltas li+li{padding-left:18px;border-left:1px solid var(--line)}
@@ -226,6 +225,23 @@ ol,ul{list-style:none}
   50%{transform:translate3d(-7%,5%,0)}66%{transform:translate3d(3%,-8%,0)}83%{transform:translate3d(-2%,7%,0)}}
 
 /* ---------- RESPONSIVE ---------- */
+
+/* ---------- KILL FEED ---------- */
+.kills{display:grid;justify-items:center;text-align:center;padding:clamp(96px,16vh,180px) var(--edge)}
+.kills .eyebrow{justify-content:center}
+.kills__count{margin-top:28px;font:900 clamp(120px,26vw,400px)/.8 var(--sans);font-stretch:62%;letter-spacing:-.01em;color:var(--red);font-variant-numeric:tabular-nums}
+.kills__label{margin-top:clamp(28px,4vh,44px);font:900 clamp(28px,4.4vw,64px)/1 var(--sans);font-stretch:80%;text-transform:uppercase}
+.kills__note{margin-top:16px;font:12px/1.6 var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--dim)}
+.kills__bar{width:min(640px,100%);height:6px;margin-top:clamp(40px,7vh,64px);background:var(--faint);overflow:hidden}
+.kills__bar i{display:block;height:100%;background:var(--red);transform-origin:left center;transform:scaleX(0);transition:transform 1.2s var(--ease)}
+.kills__split{width:min(640px,100%);display:flex;justify-content:space-between;gap:16px;margin-top:14px;font:11px/1.4 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--dim)}
+.kills__split b{margin-left:8px;font-weight:400;color:var(--paper);font-variant-numeric:tabular-nums}
+
+/* ---------- CHART ---------- */
+.chart{margin-top:48px;border:2px solid var(--ink);background:var(--ink);height:clamp(380px,62vh,560px)}
+.chart iframe{display:block;width:100%;height:100%;border:0}
+.sr-only{position:absolute;width:1px;height:1px;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
 @media (max-width:900px){
   .hero__meta{flex-direction:column;align-items:flex-start;padding-right:0}
   .film-ctrl{top:calc(84px + env(safe-area-inset-top,0px));bottom:auto}
@@ -257,6 +273,8 @@ ol,ul{list-style:none}
   .health__label{display:none}
   .health__bar{height:3px;background:rgba(245,242,237,.12)}
   .feed{bottom:calc(20px + env(safe-area-inset-bottom,0px));right:var(--edge)}
+  .chart{height:420px;margin-left:calc(var(--edge) * -1);margin-right:calc(var(--edge) * -1);border-left:0;border-right:0}
+  .kills__split{flex-direction:column;align-items:center;gap:6px}
 }
 
 /* ---------- MOTION ---------- */
