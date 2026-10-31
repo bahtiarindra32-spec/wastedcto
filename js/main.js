@@ -258,8 +258,8 @@
     track.replaceChildren(group(), group());
   }
 
-  const kills = (() => {
-    const el = $('[data-k="kills"]');
+  const survivors = (() => {
+    const el = $('[data-k="holders"]');
     const sec = $('.kills');
     let target = null, shown = 0, seen = false, raf = 0;
     const show = (v) => { el.textContent = int(Math.round(v)); };
@@ -319,7 +319,6 @@
     const total = (nb || 0) + (ns || 0);
     const bar = $('[data-k="buyShare"]');
     if (bar) bar.style.transform = 'scaleX(' + (total ? nb / total : 0) + ')';
-    kills.set(nb);
     ['m5', 'h1', 'h6'].forEach((k) => setAll(k, pct(ch[k]), trend(ch[k])));
     $$('[data-k="h24"]').forEach((el) => {
       el.textContent = el.closest('.cash') ? pct(ch.h24) + ' 24H' : pct(ch.h24);
@@ -350,7 +349,6 @@
 
   function renderError() {
     setAll('status', 'No signal');
-    kills.fail();
     document.body.classList.remove('is-live');
     const verdict = $('[data-k="verdict"]');
     if (verdict.textContent === 'Loading…') {
@@ -384,9 +382,44 @@
       if (!document.hidden) timer = setTimeout(load, REFRESH_MS);
     }
   }
+  const HOLDERS_API = 'https://api.geckoterminal.com/api/v2/networks/solana/tokens/' + CA + '/info';
+  const HOLDERS_MS = 300000;
+  let holdersTimer = 0;
+  let holdersAt = null;
+  function ago(t) {
+    const m = Math.max(0, Math.round((Date.now() - t) / 60000));
+    if (m < 1) return 'updated just now';
+    if (m < 60) return 'updated ' + m + 'm ago';
+    const h = Math.round(m / 60);
+    return h < 48 ? 'updated ' + h + 'h ago' : 'updated ' + Math.round(h / 24) + 'd ago';
+  }
+  async function loadHolders() {
+    clearTimeout(holdersTimer);
+    const ctrl = new AbortController();
+    const kill = setTimeout(() => ctrl.abort(), 12000);
+    try {
+      const res = await fetch(HOLDERS_API, { signal: ctrl.signal, cache: 'no-store' });
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const h = ((((await res.json()) || {}).data || {}).attributes || {}).holders || {};
+      const count = num(h.count);
+      if (count === null) throw new Error('no holders');
+      survivors.set(count);
+      const t = Date.parse(h.last_updated);
+      holdersAt = Number.isNaN(t) ? null : t;
+      setAll('holdersAt', holdersAt ? ago(holdersAt) : 'live');
+    } catch {
+      survivors.fail();
+      if (holdersAt === null) setAll('holdersAt', 'no signal, retrying');
+    } finally {
+      clearTimeout(kill);
+      if (!document.hidden) holdersTimer = setTimeout(loadHolders, HOLDERS_MS);
+    }
+  }
+
   document.addEventListener('visibilitychange', () => {
-    if (document.hidden) clearTimeout(timer);
-    else load();
+    if (document.hidden) { clearTimeout(timer); clearTimeout(holdersTimer); }
+    else { load(); loadHolders(); }
   });
   load();
+  loadHolders();
 })();
